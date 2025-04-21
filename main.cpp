@@ -8,6 +8,7 @@
 
 enum Algorithm
 {
+    None = -1,
     BubbleSort = 0,
     InsertionSort = 1,
     SelectionSort = 2
@@ -29,7 +30,7 @@ sf::SoundBuffer generateTone(float frequency, int durationMs, unsigned sampleRat
 
 int main()
 {
-    const int width = 2200, height = 1200, size = 100;
+    const int width = 3500, height = 1800, size = 100;
     std::vector<int> array(size);
     srand(static_cast<unsigned>(time(0)));
 
@@ -41,13 +42,14 @@ int main()
         return -1;
     sf::Text dropdownText;
     dropdownText.setFont(font);
-    dropdownText.setCharacterSize(24);
+    dropdownText.setCharacterSize(32); // Increased text size
     dropdownText.setFillColor(sf::Color::Black);
 
     std::vector<std::string> algNames = {"Bubble Sort", "Insertion Sort", "Selection Sort"};
-    int selectedAlg = 0;
+    int selectedAlg = None;
     bool dropdownOpen = false;
-    sf::FloatRect dropdownRect(10, 10, 300, 40);
+    sf::FloatRect dropdownRect(10, 10, 400, 60); // Increased button size
+    bool started = false;
 
     int bI = 0, bJ = 0;
     int insI = 1, insJ = 1;
@@ -70,8 +72,6 @@ int main()
         sortingDone = false;
     };
 
-    reset();
-
     while (window.isOpen())
     {
         sf::Event event;
@@ -90,19 +90,20 @@ int main()
                 {
                     for (int idx = 0; idx < static_cast<int>(algNames.size()); idx++)
                     {
-                        sf::FloatRect itemRect(10, 10 + 40 * (idx + 1), 300, 40);
+                        sf::FloatRect itemRect(10, 10 + 60 * (idx + 1), 400, 60); // Adjusted item size
                         if (itemRect.contains(mx, my))
                         {
                             selectedAlg = idx;
                             dropdownOpen = false;
                             reset();
+                            started = true;
                         }
                     }
                 }
             }
         }
 
-        if (!sortingDone)
+        if (started && !sortingDone && selectedAlg != None)
         {
             switch (selectedAlg)
             {
@@ -156,6 +157,10 @@ int main()
                 {
                     if (selJ < size)
                     {
+                        float freqcmp = 200.0f + (array[selJ] / static_cast<float>(height)) * 1000.0f;
+                        toneBuffer = generateTone(freqcmp, 15);
+                        sound.setBuffer(toneBuffer);
+                        sound.play();
                         if (array[selJ] < array[selMin])
                             selMin = selJ;
                         selJ++;
@@ -187,7 +192,7 @@ int main()
         {
             sf::RectangleShape bar(sf::Vector2f(barWidth - 1, array[k]));
             bool highlight = false;
-            if (!sortingDone)
+            if (!sortingDone && started && selectedAlg != None)
             {
                 if (selectedAlg == BubbleSort && (k == bJ || k == bJ + 1))
                     highlight = true;
@@ -206,27 +211,27 @@ int main()
         drShape.setPosition(dropdownRect.left, dropdownRect.top);
         drShape.setFillColor(sf::Color::White);
         drShape.setOutlineColor(sf::Color::Black);
-        drShape.setOutlineThickness(1);
+        drShape.setOutlineThickness(2);
         window.draw(drShape);
 
-        dropdownText.setString(algNames[selectedAlg]);
-        dropdownText.setPosition(dropdownRect.left + 10, dropdownRect.top + 8);
+        dropdownText.setString(selectedAlg == None ? "Select Algorithm" : algNames[selectedAlg]);
+        dropdownText.setPosition(dropdownRect.left + 15, dropdownRect.top + 10);
         window.draw(dropdownText);
 
         if (dropdownOpen)
         {
             for (int idx = 0; idx < static_cast<int>(algNames.size()); idx++)
             {
-                sf::FloatRect itemRect(10, 10 + 40 * (idx + 1), 300, 40);
+                sf::FloatRect itemRect(10, 10 + 60 * (idx + 1), 400, 60);
                 sf::RectangleShape itShape(sf::Vector2f(itemRect.width, itemRect.height));
                 itShape.setPosition(itemRect.left, itemRect.top);
                 itShape.setFillColor(sf::Color::White);
                 itShape.setOutlineColor(sf::Color::Black);
-                itShape.setOutlineThickness(1);
+                itShape.setOutlineThickness(2);
                 window.draw(itShape);
 
                 dropdownText.setString(algNames[idx]);
-                dropdownText.setPosition(itemRect.left + 10, itemRect.top + 8);
+                dropdownText.setPosition(itemRect.left + 15, itemRect.top + 10);
                 window.draw(dropdownText);
             }
         }
